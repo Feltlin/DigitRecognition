@@ -57,7 +57,7 @@ class NEURAL:
         self.mnist_list = []
         self.mnist_index = 0
 
-        with open('./MNIST/mnist_test.csv', 'r') as csvfile:
+        with open(MNIST_path, 'r') as csvfile:
             reader = csv.reader(csvfile)
             for i in reader:
                 self.mnist_list.append(i)
@@ -502,6 +502,8 @@ screen = pygame.display.set_mode((1200,600))
 clock = pygame.time.Clock()
 pygame.display.set_caption("Draw")
 border_1 = pygame.image.load("Image/border_4.png").convert_alpha()
+
+MNIST_path = './MNIST/mnist_test.csv'
 
 state = STATE()
 paint = PAINT(0,0)
