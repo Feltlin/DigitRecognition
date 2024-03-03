@@ -1,2 +1,4 @@
 #Ignore the MNIST dataset
 MNIST/
+#Ignore pycache
+__pycache__/

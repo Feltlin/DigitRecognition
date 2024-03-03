@@ -311,12 +311,17 @@ class STATE:
         background.fill("Black")
         screen.blit(background,(0,0))
 
-        #Change to the input scene when Start button is clicked.
-        start_button = BUTTON(cell_number * cell_size / 2,cell_number * cell_size / 2,border_1,2,0.5,"Start")
+        #Change to the input scene
+        start_button = BUTTON(cell_number * cell_size / 2,(cell_number - 5) * cell_size / 2,border_1,2,0.5,"Start")
         if start_button.show(screen):
             self.state = "input_text"
         
-        #Quit the game when Quit button is clicked
+        #Change to the train state
+        train_button = BUTTON(cell_number * cell_size / 2,cell_number * cell_size / 2,border_1,2,0.5,"Train")
+        if train_button.show(screen):
+            self.state = "train"
+        
+        #Quit the game
         quit_button = BUTTON(cell_number * cell_size / 2,(cell_number + 5) * cell_size / 2,border_1,2,0.5,"Quit")
         if quit_button.show(screen):
             pygame.quit()
