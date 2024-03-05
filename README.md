@@ -41,3 +41,89 @@ Run `NeuralNetwork.py`
     **Loss function**: *Cross Entropy*
 
     and their derivatives.
+
+# Math
+
+* ## Variable
+
+    $w$: weight
+
+    $b$: bias
+
+    $a$: activation
+
+    $z$: unormalized activation (weighted sum)
+
+    $L$: output layer
+
+    $y$: desired output
+
+    $l$: loss
+
+* ## Activation Function
+
+    Rectified linear unit:
+
+    $ReLU(x) = \left\{
+                \begin{matrix}
+                x & x>0 \\
+                0 & x\leqslant 0
+                \end{matrix}
+                \right.$
+
+    Derivative of ReLU:
+
+    $ReLU'(x) =\left\{
+                \begin{matrix*}
+                1 & x>0 \\
+                0 & x<0
+                \end{matrix*}
+                \right.$
+    <br><br>
+
+    Sigmoid:
+
+    $\sigma(x) = \frac{1}{1+e^{-x}}$
+
+    Derivative of sigmoid:
+
+    $\sigma'(x) = \sigma(x)(1-\sigma(x)) = \frac{1}{1+e^{-x}} (1-\frac{1}{1+e^{-x}})$
+    <br><br>
+
+    $\tanh$:
+
+    $\tanh(x) = \frac{e^x-e^{-x}} {e^x+e^{-x}}$
+
+    Derivative of $\tanh$
+
+    $\tanh'(x) = 1-\tanh^2(x)$
+    <br><br>
+
+    Softmax:
+
+    $softmax(x)_i = \frac{e^{x_i}} {\sum^K_{j=1}e^{x_j}}$
+
+    Derivative of softmax:
+
+    Jacobian matrix(To be updated...)
+
+* ## Loss Function
+
+    Cross-entropy:
+
+    $H(p,q)=-\sum p(x)\log q(x)$
+    <br><br>
+
+    Mean squared error:
+
+    $MSE=\frac{1} {n} \sum^n_{i=1}(y_i-\hat{y}_i)^2$
+
+    $y$: desired value
+
+    $\hat{y}$: predicted value
+
+* ## Symbol Notation
+    $w\cdot b$: dot product / matrix multiplication
+
+    $w \circ b$: Hadamard product / element-wise product
+
