@@ -43,6 +43,23 @@ Run `NeuralNetwork.py`
     and their derivatives.
 
 # Math
+Math equations such as matrix cannot properly display on **GitHub**.
+
+This README file is written in **VS Code**.
+
+Please use **VS Code** or other Markdown reader to view.
+
+* ## Prior Knowledge
+
+    Vector & Matrix:
+    * Matrix Multiplication
+    * Transpose
+
+    Multivariable Calculus:
+    * Partial Derivative
+    * Gradient
+
+    One-Hot Encoding
 
 * ## Variable
 
@@ -130,10 +147,10 @@ Run `NeuralNetwork.py`
 
     $k \times j$: matrix / vector dimension, $k$ rows, $j$ columns
 
+    $a^T$: transpose
+
 * ## Neural Network
-
     ### Forward Propagation
-
     #### Layer Input:
 
     $a^I_{1 \times I} = \begin{bmatrix}
@@ -195,6 +212,65 @@ Run `NeuralNetwork.py`
 
     $y = \begin{bmatrix}
         y_1 & y_2 & \cdots & y_O
-        \end{bmatrix}$
+        \end{bmatrix}$ (One-Hot Encoding)
     
-    $l = -\sum^O_{j=1} y_j\ln a^O_j = -y_1ln a^O_1 - y_2ln a^O_2 - \cdots - y_Oln a^O_O$
+    $l = -\sum^O_{j=1} y_j\ln a^O_j = -y_1ln a^O_1 - y_2ln a^O_2 - \cdots - y_Oln a^O_O$ (Cross-entropy)
+
+    ### Backward Propagation
+    #### Layer Output
+
+    $\begin{align}
+    \notag {\frac{\partial l} {\partial a^O}}_{1 \times O}
+    & = & \begin{bmatrix} \frac{\partial l} {\partial a^O_1} & \frac{\partial l} {\partial a^O_2} & \cdots & \frac{\partial l} {\partial a^O_O} \end{bmatrix} \\
+    \notag & = & \begin{bmatrix} -\frac{y_1} {a^O_1} & -\frac{y_2} {a^O_2} & \cdots & -\frac{y_O} {a^O_O} \end{bmatrix}
+    \end{align}$
+
+    This is a *Jacobian* matrix:
+
+    $\begin{align} \notag
+    {\frac{\partial a^O} {\partial z^O}}_{O \times O}
+    & = & \begin{bmatrix}
+    \frac{\partial a^O_1} {\partial z^O_1} & \frac{\partial a^O_1} {\partial z^O_2} & \cdots & \frac{\partial a^O_1} {\partial z^O_O} \\ 
+    \frac{\partial a^O_2} {\partial z^O_1} & \frac{\partial a^O_2} {\partial z^O_2} & \cdots & \frac{\partial a^O_2} {\partial z^O_O} \\
+    \vdots & \vdots & \ddots & \vdots \\
+    \frac{\partial a^O_O} {\partial z^O_1} & \frac{\partial a^O_O} {\partial z^O_2} & \cdots & \frac{\partial a^O_O} {\partial z^O_O}
+    \end{bmatrix} \\
+    \notag & = & \begin{bmatrix}
+    a^O_1(1-a^O_1) & -a^O_1a^O_2 & \cdots & -a^O_1a^O_O \\
+    -a^O_1a^O_2 & a^O_2(1-a^O_2) & \cdots & -a^O_2a^O_O \\
+    \vdots & \vdots & \ddots & \vdots \\
+    -a^O_1a^O_O & -a^O_2a^O_O & \cdots & a^O_O(1-a^O_O)
+    \end{bmatrix}
+    \end{align}$
+
+    $\because y$ is a *One-Hot*, $\sum^O_{j=1}y_j=1$
+
+    $\therefore$
+
+    $\begin{align}
+    \notag {\frac{\partial l} {\partial z^O}}_{1 \times O}
+    & = & {\frac{\partial l} {\partial a^O}}_{1 \times O} \cdot {\frac{\partial a^O} {\partial z^O}}_{O \times O} \\
+    \notag & = & \begin{bmatrix} -y_1+a^O_1\sum^O_{j=1}y_j & -y_2+a^O_2\sum^O_{j=1}y_j & \cdots -y_O+a^O_1\sum^O_{j=1}y_j \end{bmatrix} \\
+    \notag & = & \begin{bmatrix} a^O_1-y_1 & a^O_2-y_2 & \cdots a^O_O-y_O\end{bmatrix} \\
+    \notag & = & a^O-y
+    \end{align}$
+
+    $\begin{align}
+    \notag {\frac{\partial l} {\partial w^O}}_{k \times O}
+    & = & {\frac{\partial z^O} {\partial w^O}}_{k \times 1} \cdot {\frac{\partial l^O} {\partial z^O}}_{O \times O} \\
+    \notag & = & a^{2T} \cdot \frac{\partial l} {\partial z^O}
+    \end{align}$
+
+    $\because \frac{\partial z^O} {\partial b^O}$ is a *Jacobian* matrix and is a *identity* matrix
+
+    $\begin{align}
+    \notag {\frac{\partial l} {\partial b^O}}_{1 \times O}
+    & = & {\frac{\partial l} {\partial z^O}}_{1 \times O} \cdot {\frac{\partial z^O} {\partial b^O}}_{O \times O} \\
+    \notag & = & \frac{\partial l} {\partial z^O} \cdot 1
+    \end{align}$
+
+    $\begin{align}
+    \notag {\frac{\partial l} {\partial a^2}}_{1 \times k}
+    & = & {\frac{\partial l} {\partial z^O}}_{1 \times O} \cdot {\frac{\partial z^O} {\partial a^2}}_{O \times k} \\
+    \notag & = & \frac{\partial l} {\partial z^O} \cdot w^{OT}
+    \end{align}$
