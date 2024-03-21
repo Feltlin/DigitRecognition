@@ -4,7 +4,7 @@ import os
 import numpy as np
 from PIL import Image
 import csv
-from Layers import *
+from Layer import *
 np.random.seed(0)
 
 #Find the first missing number in a ordered list.
