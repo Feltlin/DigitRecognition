@@ -5,6 +5,7 @@ import numpy as np
 from PIL import Image
 import csv
 from Layer import *
+from PygameClass import *
 np.random.seed(0)
 
 #Find the first missing number in a ordered list.
@@ -81,9 +82,9 @@ class NEURAL:
                 self.desire_output = np.zeros((1, self.n_output))
                 self.desire_output[0, digit] = 1
 
-                self.mnist_paint = PAINT(cell_number*cell_size, 0)
+                self.mnist_paint = PAINT(cell_number*cell_size, 0, cell_number, cell_number, cell_size)
                 self.mnist_paint.array = self.layer_input.reshape(28,28)
-                self.mnist_paint.draw_pixel()
+                self.mnist_paint.show(screen)
 
                 self.layer_input = (self.layer_input - np.min(self.layer_input)) / (np.max(self.layer_input) - np.min(self.layer_input))
                 
@@ -152,125 +153,6 @@ class NEURAL:
 
 
 #########################################################################################################################
-#Pygame Section
-
-class PAINT:
-
-    def __init__(self,x,y):
-
-        #Matrix for saving the image
-        self.array = np.zeros((cell_number,cell_number), dtype = int)
-        self.x = x
-        self.y = y
-
-    def draw_pixel(self):
-        for row in range(self.array.shape[0]):
-            for column in range(self.array.shape[1]):
-                if self.array[row,column] != 0:
-                    light = self.array[row,column]
-                    x_pos = int(column * cell_size) + self.x
-                    y_pos = int(row * cell_size) + self.y
-                    pixel_rect = pygame.Rect(x_pos,y_pos,cell_size,cell_size)
-                    pygame.draw.rect(screen,(light,light,light),pixel_rect)
-
-    def change_pixel(self,mouse_x,mouse_y,change):
-        column = mouse_x // cell_size
-        row = mouse_y // cell_size
-        if row - 1 < 0 or row + 1 >= cell_number or column - 1 < 0 or column + 1 >= cell_number:
-            pass
-        elif change == 1:
-            hardness = 128
-            self.array[row,column] += hardness
-            self.array[row-1,column-1] += hardness/4
-            self.array[row-1,column] += hardness/2
-            self.array[row-1,column+1] += hardness/4
-            self.array[row,column-1] += hardness/2
-            self.array[row,column+1] += hardness/2
-            self.array[row+1,column-1] += hardness/4
-            self.array[row+1,column] += hardness/2
-            self.array[row+1,column+1] += hardness/4
-            self.array[self.array > 255] = 255
-        elif change == 0:
-            self.array[row,column] = 0
-
-class TEXT:
-
-    def __init__(self, x, y, w, h, text):
-        self.x = x
-        self.y = y
-        self.w = w
-        self.h = h
-
-        self.text = text
-        self.color = pygame.Color('lightskyblue3')
-    
-    def show(self,screen):
-
-        #Render the text surface.
-        self.text_surface = base_font.render(self.text, False, 'White')
-
-        #Get the text rectangle.
-        self.rect = self.text_surface.get_rect(center = (self.x,self.y))
-
-        #Text box min size
-        self.rect.w = max(self.w, self.text_surface.get_width())
-
-        #Draw the text box.
-        pygame.draw.rect(screen,self.color,self.rect,2)
-
-        #Draw the text.
-        screen.blit(self.text_surface,self.rect)
-
-    def input(self,event):
-        action = False
-
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_BACKSPACE:
-                self.text = self.text[:-1]
-            elif event.key == pygame.K_RETURN:
-                action = True
-            else:
-                self.text += event.unicode
-
-        return action
-
-class BUTTON:
-
-    def __init__(self, x:int, y:int, image:pygame.image, w_scale:float, h_scale:float, text:str):
-        self.x = x
-        self.y = y
-        w = image.get_width()
-        h = image.get_height()
-        self.image = pygame.transform.scale(image, (int(w * w_scale), int(h * h_scale)))
-        self.text = text
-        self.clicked = False
-
-        self.image_rect = self.image.get_rect(center = (self.x,self.y))
-        self.text_surface = base_font.render(self.text, True, 'White')
-        self.text_rect = self.text_surface.get_rect(center = (self.x, self.y))
-
-    def show(self, surface:pygame.Surface) -> bool:
-        action = False
-
-        #Get mouse position.
-        mouse_pos = pygame.mouse.get_pos()
-
-        #Check mouse collision and clicked
-        if self.image_rect.collidepoint(mouse_pos):
-            if pygame.mouse.get_pressed()[0] == 1 and self.clicked == False:
-                self.clicked = True
-                action = True
-        
-        if pygame.mouse.get_pressed()[0] == 0:
-            self.clicked = False
-
-        surface.blit(self.image, self.image_rect)
-        surface.blit(self.text_surface, self.text_rect)
-
-        return action
-
-
-#########################################################################################################################
 #Pygame game state section
 
 class STATE:
@@ -323,23 +205,23 @@ class STATE:
         screen.blit(background,(0,0))
 
         #Change to the input scene
-        start_button = BUTTON(cell_number * cell_size / 2,(cell_number - 5) * cell_size / 2,border_1,2,0.5,"Start")
+        start_button = BUTTON(cell_number * cell_size / 2,(cell_number - 5) * cell_size / 2,base_font,border_1,2,0.5,"Start")
         if start_button.show(screen):
             self.state = "input_text"
         
         #Change to the train state
-        train_button = BUTTON(cell_number * cell_size / 2,cell_number * cell_size / 2,border_1,2,0.5,"Train")
+        train_button = BUTTON(cell_number * cell_size / 2,cell_number * cell_size / 2,base_font,border_1,2,0.5,"Train")
         if train_button.show(screen):
             self.state = "train"
         
         #Load pre-trained neural network
-        load_button = BUTTON(cell_number * cell_size / 2,(cell_number + 5) * cell_size / 2,border_1,2,0.5,"Load")
+        load_button = BUTTON(cell_number * cell_size / 2,(cell_number + 5) * cell_size / 2,base_font,border_1,2,0.5,"Load")
         if load_button.show(screen):
             #Add loading network code.
             ...
         
         #Quit the game
-        quit_button = BUTTON(cell_number * cell_size / 2,(cell_number + 10) * cell_size / 2,border_1,2,0.5,"Quit")
+        quit_button = BUTTON(cell_number * cell_size / 2,(cell_number + 10) * cell_size / 2,base_font,border_1,2,0.5,"Quit")
         if quit_button.show(screen):
             pygame.quit()
             sys.exit()
@@ -411,7 +293,7 @@ class STATE:
         background.fill("Black")
         screen.blit(background,(0,0))
         
-        paint.draw_pixel()
+        paint.show(screen)
 
     #The back propagation training scene.
     def train(self):
@@ -427,29 +309,29 @@ class STATE:
         screen.fill('Black')
         neural.train()
         
-        epoch_item = TEXT(cell_number*cell_size/2, (cell_number - 10)*cell_size/2, cell_size,cell_size, "Sample No." + str(neural.epoch_item))
+        epoch_item = TEXT(cell_number*cell_size/2, (cell_number - 10)*cell_size/2, cell_size,cell_size, base_font, "Sample No." + str(neural.epoch_item))
         epoch_item.show(screen)
 
-        cost = TEXT(cell_number*cell_size/2, (cell_number - 5)*cell_size/2, cell_size,cell_size, "Cost: ")
+        cost = TEXT(cell_number*cell_size/2, (cell_number - 5)*cell_size/2, cell_size,cell_size, base_font, "Cost: ")
         cost.show(screen)
 
-        numCost = TEXT(cell_number*cell_size/2, (cell_number)*cell_size/2, cell_size,cell_size, str(round_number(neural.cost)))
+        numCost = TEXT(cell_number*cell_size/2, (cell_number)*cell_size/2, cell_size,cell_size, base_font, str(round_number(neural.cost)))
         numCost.show(screen)
 
-        correct = TEXT(cell_number*cell_size/2, (cell_number + 5)*cell_size/2, cell_size,cell_size, "Correct: " + str(neural.correct))
+        correct = TEXT(cell_number*cell_size/2, (cell_number + 5)*cell_size/2, cell_size,cell_size, base_font, "Correct: " + str(neural.correct))
         correct.show(screen)
         
-        correct_rate = TEXT(cell_number*cell_size/2, (cell_number + 10)*cell_size/2, cell_size,cell_size, str(round_number(neural.correct/neural.epoch_item)))
+        correct_rate = TEXT(cell_number*cell_size/2, (cell_number + 10)*cell_size/2, cell_size,cell_size, base_font, str(round_number(neural.correct/neural.epoch_item)))
         correct_rate.show(screen)
 
         #Change to the test drawing pad scene when Test button is clicked.
-        test_button = BUTTON(cell_number*cell_size/2, (cell_number + 15)*cell_size/2, border_1, 2, 0.5, "Test")
+        test_button = BUTTON(cell_number*cell_size/2, (cell_number + 15)*cell_size/2, base_font, border_1, 2, 0.5, "Test")
         if test_button.show(screen):
             self.test = True
             self.state = "test_drawing_pad"
         
         #Save the trained neural network when Save button is clicked.
-        save_button = BUTTON(cell_number*cell_size/2, (cell_number + 20)*cell_size/2, border_1, 2, 0.5, "Save")
+        save_button = BUTTON(cell_number*cell_size/2, (cell_number + 20)*cell_size/2, base_font, border_1, 2, 0.5, "Save")
         if save_button.show(screen):
             #Add saving network code.
             ...
@@ -491,7 +373,7 @@ class STATE:
         background.fill("Black")
         screen.blit(background,(0,0))
         
-        paint.draw_pixel()
+        paint.show(screen)
 
     #The test output scene.
     def test_output(self):
@@ -513,7 +395,7 @@ class STATE:
         background.fill("Black")
         screen.blit(background,(0,0))
 
-        predicted = TEXT(cell_number * cell_size / 2,cell_number * cell_size / 2,cell_size,cell_size, "You write a " + str(neural.predicted))
+        predicted = TEXT(cell_number * cell_size / 2,cell_number * cell_size / 2,cell_size,cell_size, base_font, "You write a " + str(neural.predicted))
         predicted.show(screen)
 
 
@@ -534,11 +416,11 @@ border_1 = pygame.image.load("Image/border_4.png").convert_alpha()
 MNIST_path = './MNIST/mnist_test.csv'
 
 state = STATE()
-paint = PAINT(0,0)
+paint = PAINT(0, 0, cell_number, cell_number, cell_size)
 neural = NEURAL()
 
-text = TEXT(cell_number * cell_size / 2,(cell_number + 2) * cell_size / 2,cell_size,cell_size, '')
-prompt = TEXT(cell_number * cell_size / 2,cell_number * cell_size / 2 - cell_size,cell_size,cell_size, "Input a digit:")
+text = TEXT(cell_number * cell_size / 2,(cell_number + 2) * cell_size / 2,cell_size,cell_size, base_font, '')
+prompt = TEXT(cell_number * cell_size / 2,cell_number * cell_size / 2 - cell_size,cell_size,cell_size, base_font, "Input a digit:")
 
 
 #########################################################################################################################
