@@ -38,14 +38,15 @@ def round_number(number):
 class NEURAL:
     def __init__(self):
         self.n_input = 784
-        self.n_neuron_1 = 32
-        self.n_neuron_2 = 32
         self.n_output = 10
 
-        #Initialize layers.
-        self.layer_1 = Hidden_Layer(self.n_input,self.n_neuron_1)
-        self.layer_2 = Hidden_Layer(self.n_neuron_1,self.n_neuron_2)
-        self.layer_output = Output_Layer(self.n_neuron_2,self.n_output)
+        self.n_layer = 3
+        self.n_neuron = [self.n_input, 32, 32, self.n_output]
+        self.layers = []
+        
+        for i in range(self.n_layer - 1):
+            self.layers.append(Hidden_Layer(self.n_neuron[i], self.n_neuron[i+1]))
+        self.layers.append(Output_Layer(self.n_neuron[-2],self.n_neuron[-1]))
 
         self.cost = 0
         self.batch_size = 50
@@ -85,16 +86,16 @@ class NEURAL:
                 self.mnist_paint.draw_pixel()
 
                 self.layer_input = (self.layer_input - np.min(self.layer_input)) / (np.max(self.layer_input) - np.min(self.layer_input))
-
+                
                 #Forward propagation
-                self.layer_1.forward(self.layer_input)
-                self.layer_2.forward(self.layer_1.output)
-                self.layer_output.forward(self.layer_2.output)
+                self.layers[0].forward(self.layer_input)
+                for i in range(1, self.n_layer):
+                    self.layers[i].forward(self.layers[i-1].output)
 
                 #Back propagation
-                self.layer_output.backward(self.desire_output)
-                self.layer_2.backward(self.layer_output.dinput)
-                self.layer_1.backward(self.layer_2.dinput)
+                self.layers[2].backward(self.desire_output)
+                for i in range(self.n_layer-1, 0, -1):
+                    self.layers[i-1].backward(self.layers[i].dinput)
 
                 if self.batch_item < self.batch_size:
                     self.batch_item += 1
@@ -102,21 +103,20 @@ class NEURAL:
                 elif self.batch_item == self.batch_size:
 
                     #Adjust all parameters in the network.
-                    self.layer_1.learn(self.rate,self.batch_size)
-                    self.layer_2.learn(self.rate,self.batch_size)
-                    self.layer_output.learn(self.rate,self.batch_size)
+                    for layer in self.layers:
+                        layer.learn(self.rate,self.batch_size)
 
                     self.batch_item = 1
 
                     #Print the final prediction of each digit's probability.
-                    print(np.max(self.layer_output.output))
-                    print("Output:", np.argmax(self.layer_output.output))
+                    print(np.max(self.layers[-1].output))
+                    print("Output:", np.argmax(self.layers[-1].output))
                     print("Desire:", digit)
-                    print("SEM:", round_number(np.std(self.layer_output.output)))
+                    print("SEM:", round_number(np.std(self.layers[-1].output)))
                 
-                if np.argmax(self.layer_output.output) == digit:
+                if np.argmax(self.layers[-1].output) == digit:
                     self.correct += 1
-                self.cost = (self.cost + cross_entropy(self.layer_output.output,self.desire_output)/784) / 2
+                self.cost = (self.cost + cross_entropy(self.layers[-1].output,self.desire_output)/784) / 2
             
                 self.epoch_item += 1
                 self.mnist_index += 1
@@ -130,14 +130,25 @@ class NEURAL:
     def test(self,array):
 
         #Calculater the forward output.
-        self.layer_1.forward(array.reshape(1,-1))
-        self.layer_2.forward(self.layer_1.output)
-        self.layer_output.forward(self.layer_2.output)
+        self.layers[0].forward(array.reshape(1,-1))
+        for i in range(1, self.n_layer):
+            self.layers[i].forward(self.layers[i-1].output)
 
         #Print the final prediction of each digit's probability.
-        print(self.layer_output.output)
-        self.predicted = np.argmax(self.layer_output.output)
+        print(self.layers[-1].output)
+        self.predicted = np.argmax(self.layers[-1].output)
         print("You write a ", self.predicted)
+
+    #Load a trained neural network.
+    def load(self,file_path):
+        self.layer_1 = 1
+        self.layer_2 = 1
+        self.layer_output = 1
+        #Load w and b with a for loop and consider using .txt/csv for saving data.
+
+    #Save a trained neural network.
+    def save(self):
+        ...
 
 
 #########################################################################################################################
@@ -321,8 +332,14 @@ class STATE:
         if train_button.show(screen):
             self.state = "train"
         
+        #Load pre-trained neural network
+        load_button = BUTTON(cell_number * cell_size / 2,(cell_number + 5) * cell_size / 2,border_1,2,0.5,"Load")
+        if load_button.show(screen):
+            #Add loading network code.
+            ...
+        
         #Quit the game
-        quit_button = BUTTON(cell_number * cell_size / 2,(cell_number + 5) * cell_size / 2,border_1,2,0.5,"Quit")
+        quit_button = BUTTON(cell_number * cell_size / 2,(cell_number + 10) * cell_size / 2,border_1,2,0.5,"Quit")
         if quit_button.show(screen):
             pygame.quit()
             sys.exit()
@@ -430,6 +447,12 @@ class STATE:
         if test_button.show(screen):
             self.test = True
             self.state = "test_drawing_pad"
+        
+        #Save the trained neural network when Save button is clicked.
+        save_button = BUTTON(cell_number*cell_size/2, (cell_number + 20)*cell_size/2, border_1, 2, 0.5, "Save")
+        if save_button.show(screen):
+            #Add saving network code.
+            ...
 
     #The test drawing pad scene.
     def test_drawing_pad(self):
