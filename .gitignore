@@ -2,3 +2,5 @@
 MNIST/
 #Ignore pycache
 __pycache__/
+#Ignore saved models
+Save/

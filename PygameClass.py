@@ -5,22 +5,22 @@ class PAINT:
     def __init__(self, x:int, y:int, w:int, h:int, cell_size:int):
 
         #Matrix for saving the image
-        self.array = np.zeros((w,h), dtype = int)
+        self.array = np.zeros((w, h), dtype = int)
         self.x = x
         self.y = y
         self.w = w
         self.h = h
         self.cell_size = cell_size
 
-    def show(self,screen):
+    def show(self, screen):
         for row in range(self.array.shape[0]):
             for column in range(self.array.shape[1]):
-                if self.array[row,column] != 0:
-                    light = self.array[row,column]
+                if self.array[row, column] != 0:
+                    light = self.array[row, column]
                     x_pos = int(column * self.cell_size) + self.x
                     y_pos = int(row * self.cell_size) + self.y
-                    pixel_rect = pygame.Rect(x_pos,y_pos,self.cell_size,self.cell_size)
-                    pygame.draw.rect(screen,(light,light,light),pixel_rect)
+                    pixel_rect = pygame.Rect(x_pos, y_pos, self.cell_size, self.cell_size)
+                    pygame.draw.rect(screen, (light, light, light), pixel_rect)
 
     def change_pixel(self, mouse_x, mouse_y, change):
         column = mouse_x // self.cell_size
@@ -29,18 +29,18 @@ class PAINT:
             pass
         elif change == 1:
             hardness = 128
-            self.array[row,column] += hardness
-            self.array[row-1,column-1] += hardness/4
-            self.array[row-1,column] += hardness/2
-            self.array[row-1,column+1] += hardness/4
-            self.array[row,column-1] += hardness/2
-            self.array[row,column+1] += hardness/2
-            self.array[row+1,column-1] += hardness/4
-            self.array[row+1,column] += hardness/2
-            self.array[row+1,column+1] += hardness/4
+            self.array[row, column] += hardness
+            self.array[row-1, column-1] += hardness / 4
+            self.array[row-1, column] += hardness / 2
+            self.array[row-1, column+1] += hardness / 4
+            self.array[row, column-1] += hardness / 2
+            self.array[row, column+1] += hardness / 2
+            self.array[row+1, column-1] += hardness / 4
+            self.array[row+1, column] += hardness / 2
+            self.array[row+1, column+1] += hardness / 4
             self.array[self.array > 255] = 255
         elif change == 0:
-            self.array[row,column] = 0
+            self.array[row, column] = 0
 
 class TEXT:
     def __init__(self, x:int, y:int, w:int, h:int, font:pygame.font.Font, text:str):
@@ -52,7 +52,7 @@ class TEXT:
         self.text = text
         self.color = pygame.Color('lightskyblue3')
     
-    def show(self,screen):
+    def show(self, screen):
 
         #Render the text surface.
         self.text_surface = self.font.render(self.text, False, 'White')
@@ -64,10 +64,10 @@ class TEXT:
         self.rect.w = max(self.w, self.text_surface.get_width())
 
         #Draw the text box.
-        pygame.draw.rect(screen,self.color,self.rect,2)
+        pygame.draw.rect(screen, self.color, self.rect, 2)
 
         #Draw the text.
-        screen.blit(self.text_surface,self.rect)
+        screen.blit(self.text_surface, self.rect)
 
     def input(self,event):
         action = False
