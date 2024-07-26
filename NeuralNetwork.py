@@ -1,6 +1,7 @@
 import pygame
 import sys
 import os
+import threading
 from tkinter import filedialog
 import numpy as np
 from PIL import Image
@@ -35,7 +36,6 @@ def round_number(number):
 
 #########################################################################################################################
 #Neural network section
-
 
 class NEURAL:
     def __init__(self, n_layer:int, n_neuron:list):
@@ -74,59 +74,57 @@ class NEURAL:
         # image_path = f"./Digits/{digit}/" + random.choice(os.listdir(f"./Digits/{digit}"))
         # self.digit_image = np.asarray(Image.open(image_path))
         # self.layer_input = self.digit_image.reshape(1,-1) / 255
+        while True:
+            if stop_thread:
+                break
+            if self.mnist_index < len(self.mnist_list):
+                    digit = int(self.mnist_list[self.mnist_index][0])
+                    self.layer_input = np.asarray(self.mnist_list[self.mnist_index][1:], dtype=int).reshape(1,-1)
+                    self.desire_output = np.zeros((1, self.n_neuron[-1]))
+                    self.desire_output[0, digit] = 1
+                    
+                    #Min-Max normalization
+                    self.layer_input = (self.layer_input - np.min(self.layer_input)) / (np.max(self.layer_input) - np.min(self.layer_input))
+                    
+                    #Forward propagation
+                    self.layers[0].forward(self.layer_input)
+                    for i in range(1, self.n_layer):
+                        self.layers[i].forward(self.layers[i-1].output)
 
-        if self.mnist_index < len(self.mnist_list):
-                digit = int(self.mnist_list[self.mnist_index][0])
-                self.layer_input = np.asarray(self.mnist_list[self.mnist_index][1:], dtype=int).reshape(1,-1)
-                self.desire_output = np.zeros((1, self.n_neuron[-1]))
-                self.desire_output[0, digit] = 1
+                    #Back propagation
+                    self.layers[-1].backward(self.desire_output)
+                    for i in range(self.n_layer - 1, 0, -1):
+                        self.layers[i-1].backward(self.layers[i].dinput)
 
-                self.mnist_paint = PAINT(cell_number*cell_size, 0, cell_number, cell_number, cell_size)
-                self.mnist_paint.array = self.layer_input.reshape(28,28)
-                self.mnist_paint.show(screen)
+                    if self.batch_item < self.batch_size:
+                        self.batch_item += 1
+
+                    elif self.batch_item == self.batch_size:
+
+                        #Adjust all parameters in the network.
+                        for layer in self.layers:
+                            layer.learn(self.rate,self.batch_size)
+
+                        self.batch_item = 1
+
+                        #Print the final prediction of each digit's probability.
+                        print(np.max(self.layers[-1].output))
+                        print("Output:", np.argmax(self.layers[-1].output))
+                        print("Desire:", digit)
+                        print("SEM:", round_number(np.std(self.layers[-1].output)))
+                    
+                    if np.argmax(self.layers[-1].output) == digit:
+                        self.correct += 1
+                    self.cost = (self.cost + cross_entropy(self.layers[-1].output,self.desire_output)/784) / 2
                 
-                #Min-Max normalization
-                self.layer_input = (self.layer_input - np.min(self.layer_input)) / (np.max(self.layer_input) - np.min(self.layer_input))
+                    self.epoch_item += 1
+                    self.mnist_index += 1
+            else:
+                self.epoch_item = 1
+                self.mnist_index = 0
+                self.correct = 0
+                #np.random.shuffle(self.mnist_list)
                 
-                #Forward propagation
-                self.layers[0].forward(self.layer_input)
-                for i in range(1, self.n_layer):
-                    self.layers[i].forward(self.layers[i-1].output)
-
-                #Back propagation
-                self.layers[-1].backward(self.desire_output)
-                for i in range(self.n_layer - 1, 0, -1):
-                    self.layers[i-1].backward(self.layers[i].dinput)
-
-                if self.batch_item < self.batch_size:
-                    self.batch_item += 1
-
-                elif self.batch_item == self.batch_size:
-
-                    #Adjust all parameters in the network.
-                    for layer in self.layers:
-                        layer.learn(self.rate,self.batch_size)
-
-                    self.batch_item = 1
-
-                    #Print the final prediction of each digit's probability.
-                    print(np.max(self.layers[-1].output))
-                    print("Output:", np.argmax(self.layers[-1].output))
-                    print("Desire:", digit)
-                    print("SEM:", round_number(np.std(self.layers[-1].output)))
-                
-                if np.argmax(self.layers[-1].output) == digit:
-                    self.correct += 1
-                self.cost = (self.cost + cross_entropy(self.layers[-1].output,self.desire_output)/784) / 2
-            
-                self.epoch_item += 1
-                self.mnist_index += 1
-        else:
-            self.epoch_item = 1
-            self.mnist_index = 0
-            self.correct = 0
-            #np.random.shuffle(self.mnist_list)
-            
     #Test a single digit, no training.
     def test(self, array):
 
@@ -154,7 +152,7 @@ class NEURAL:
             self.layers.append(Hidden_Layer(self.n_neuron[i], self.n_neuron[i+1]))
         self.layers.append(Output_Layer(self.n_neuron[-2], self.n_neuron[-1]))
 
-        #Load w and b with a for loop and consider using .txt/csv for saving data.
+        #Load weight and bias for each layer.
         for i in range(self.n_layer):
             self.layers[i].w = np.array(loader[2*i + 2]).astype(float).reshape(self.n_neuron[i], self.n_neuron[i+1])
             self.layers[i].b = np.array(loader[2*i + 3]).astype(float).reshape(1, self.n_neuron[i+1])
@@ -169,14 +167,6 @@ class NEURAL:
                 writer.writerow(self.layers[i].w.reshape(-1))
                 writer.writerow(self.layers[i].b.reshape(-1))
 
-
-        # print(csvfile)
-        # csvfile.write(str(self.n_layer) + "\n")
-        # for i in self.n_neuron:
-        #     csvfile.write(str(i) + ",")
-        # csvfile.close()
-
-
 #########################################################################################################################
 #Pygame game state section
 
@@ -185,6 +175,7 @@ class STATE:
     def __init__(self):
         self.state = "start"
         self.test = False
+        self.activate_train_thread = False
 
     #Update the scene.
     def update(self):
@@ -321,16 +312,20 @@ class STATE:
     def train(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                global stop_thread
+                stop_thread = True
                 pygame.quit()
                 sys.exit()
-            if event.type == pygame.KEYDOWN:
-                #Press key Enter to stop back propagation.
-                if event.key == pygame.K_RETURN:
-                    self.state = "start"
         
         screen.fill('Black')
-        neural.train()
-        
+        if self.activate_train_thread == False:
+            train_thread.start()
+            self.activate_train_thread = True
+
+        self.mnist_paint = PAINT(cell_number*cell_size, 0, cell_number, cell_number, cell_size)
+        self.mnist_paint.array = neural.layer_input.reshape(28,28)
+        self.mnist_paint.show(screen)
+
         epoch_item = TEXT(cell_number*cell_size/2, (cell_number - 10)*cell_size/2, cell_size, cell_size, base_font, "Sample No." + str(neural.epoch_item))
         epoch_item.show(screen)
 
@@ -349,6 +344,7 @@ class STATE:
         #Change to the test drawing pad scene when Test button is clicked.
         test_button = BUTTON(cell_number*cell_size/2, (cell_number + 15)*cell_size/2, base_font, border_1, 2, 0.5, "Test")
         if test_button.show(screen):
+            stop_thread = True
             self.test = True
             self.state = "test_drawing_pad"
         
@@ -358,6 +354,7 @@ class STATE:
             filename = filedialog.asksaveasfilename(title = "Select a Location", initialdir= "./Save", initialfile = "Model.csv", defaultextension=".csv",filetypes=[("CSV Files","*.csv*"),("All Files","*.*")])
             if filename:
                 neural.save(filename)
+                stop_thread = True
 
     #The test drawing pad scene.
     def test_drawing_pad(self):
@@ -421,8 +418,6 @@ class STATE:
         predicted = TEXT(cell_number * cell_size / 2, cell_number * cell_size / 2, cell_size, cell_size, base_font, "You write a " + str(neural.predicted))
         predicted.show(screen)
 
-
-
 #########################################################################################################################
 #Pygame initialize section
 
@@ -444,7 +439,8 @@ neural = NEURAL(3, [784, 32, 32, 10])
 
 text = TEXT(cell_number * cell_size, (cell_number + 5) * cell_size / 2, cell_size, cell_size, base_font, '')
 prompt = TEXT(cell_number * cell_size, cell_number * cell_size / 2 - cell_size, cell_size, cell_size, base_font, "Input a digit:")
-
+train_thread = threading.Thread(target=neural.train)
+stop_thread = False
 
 #########################################################################################################################
 #Pygame running section
