@@ -11,16 +11,26 @@ Use **MNIST** `.csv` dataset to train. (Ignored in the repository)
 
 Use **Pygame** to visualize the process and implement the drawing pad interface.
 
+Use **Threading** to separate model calculation and screen update.
+
+Use **Tkinter** to load and save the trained model.
+
+Use **Pillow** to process image.
+
 # Installation
 * NumPy: `pip install numpy`
 * Pygame: `pip install pygame`
+* Tkinter: `pip install tk`
+* Pillow: `pip install pillow`
 
 * Update the `MNIST_path` in `NeuralNetwork.py` to the corresponding training dataset `.csv` file.
 
     `MNIST_path = './MNIST/mnist_test.csv'`
 
 # Usage
-Run `NeuralNetwork.py`
+Run `NeuralNetwork.py` in the terminal.
+
+`python .\NeuralNetwork.py`
 
 # Code
 * `NeuralNetwork.py`
@@ -28,7 +38,7 @@ Run `NeuralNetwork.py`
     Main code file.
 
     **Pygame** running code.
-* `Layers.py`
+* `Layer.py`
 
     Class `Hidden_Layer`, `Output_Layer`
 
@@ -41,6 +51,13 @@ Run `NeuralNetwork.py`
     **Loss function**: $Cross-entropy$
 
     and their derivatives.
+
+* `PygameClass.py`
+
+    Class `PAINT`: Drawing canvas
+    Class `TEXT`: Text box
+    Class `BUTTON`: Clickable button
+
 
 # Math
 Math equations such as matrix cannot properly display on **GitHub**.
@@ -151,13 +168,13 @@ Please use **VS Code** or other Markdown reader to view.
 
 * ## Neural Network
     ### Forward Propagation
-    #### Layer Input:
+    #### Layer Input
 
     $a^I_{1 \times I} = \begin{bmatrix}
                         a^I_1 & a^I_2 & \cdots & a^I_I
                         \end{bmatrix}$
 
-    #### Layer 1:
+    #### Layer 1
 
     $w^1_{I \times m} = \begin{bmatrix}
                         w^1_{1,1} & w^1_{1,2} & \cdots & w^1_{1,m} \\
@@ -174,7 +191,7 @@ Please use **VS Code** or other Markdown reader to view.
 
     $a^1_{1 \times m} = ReLU(z^1_{1 \times m})$
 
-    #### Layer 2:
+    #### Layer 2
 
     $w^2_{m \times k} = \begin{bmatrix}
                         w^2_{1,1} & w^2_{1,2} & \cdots & w^2_{1,k} \\
@@ -191,7 +208,7 @@ Please use **VS Code** or other Markdown reader to view.
 
     $a^2_{1 \times k} = ReLU(z^2_{1 \times k})$
 
-    #### Layer Output:
+    #### Layer Output
 
     $w^O_{k \times O} = \begin{bmatrix}
                         w^O_{1,1} & w^O_{1,2} & \cdots & w^O_{1,O} \\
@@ -263,14 +280,70 @@ Please use **VS Code** or other Markdown reader to view.
 
     $\because \frac{\partial z^O} {\partial b^O}$ is a *Jacobian* matrix and is a *identity* matrix
 
+    $\therefore$
+
     $\begin{align}
     \notag {\frac{\partial l} {\partial b^O}}_{1 \times O}
     & = & {\frac{\partial l} {\partial z^O}}_{1 \times O} \cdot {\frac{\partial z^O} {\partial b^O}}_{O \times O} \\
     \notag & = & \frac{\partial l} {\partial z^O} \cdot 1
     \end{align}$
 
+    #### Layer 2
+
     $\begin{align}
     \notag {\frac{\partial l} {\partial a^2}}_{1 \times k}
     & = & {\frac{\partial l} {\partial z^O}}_{1 \times O} \cdot {\frac{\partial z^O} {\partial a^2}}_{O \times k} \\
     \notag & = & \frac{\partial l} {\partial z^O} \cdot w^{OT}
+    \end{align}$
+
+    $\begin{align}
+    \notag {\frac{\partial l} {\partial z^2}}_{1 \times k}
+    & = & {\frac{\partial l} {\partial a^2}}_{1 \times k} \cdot {\frac{\partial a^2} {\partial z^2}}_{k \times k} \\
+    \notag & = & \frac{\partial l} {\partial a^2} \circ ReLU'(z^2)
+    \end{align}$
+
+    $\begin{align}
+    \notag {\frac{\partial l} {\partial w^2}}_{m \times k}
+    & = & {\frac{\partial z^2} {\partial w^2}}_{m \times 1} \cdot {\frac{\partial l} {\partial z^2}}_{1 \times k} \\
+    \notag & = & a^{1T} \cdot {\frac{\partial l} {\partial z^2}}
+    \end{align}$
+
+    $\because \frac{\partial z^2} {\partial b^2}$ is a *Jacobian* matrix and is a *identity* matrix
+
+    $\therefore$
+
+    $\begin{align}
+    \notag {\frac{\partial l} {\partial b^2}}_{1 \times k}
+    & = & {\frac{\partial l} {\partial z^2}}_{1 \times k} \cdot {\frac{\partial z^2} {\partial b^2}}_{k \times k} \\
+    \notag & = & \frac{\partial l} {\partial z^2} \cdot 1
+    \end{align}$
+
+    #### Layer 1
+
+    $\begin{align}
+    \notag {\frac{\partial l} {\partial a^1}}_{1 \times m}
+    & = & {\frac{\partial l} {\partial z^2}}_{1 \times k} \cdot {\frac{\partial z^2} {\partial a^1}}_{k \times m} \\
+    \notag & = & \frac{\partial l} {\partial z^2} \cdot w^{2T}
+    \end{align}$
+
+    $\begin{align}
+    \notag {\frac{\partial l} {\partial z^1}}_{1 \times m}
+    & = & {\frac{\partial l} {\partial a^1}}_{1 \times m} \cdot {\frac{\partial a^1} {\partial z^1}}_{m \times m} \\
+    \notag & = & \frac{\partial l} {\partial a^1} \circ ReLU'(z^1)
+    \end{align}$
+
+    $\begin{align}
+    \notag {\frac{\partial l} {\partial w^1}}_{I \times m}
+    & = & {\frac{\partial z^1} {\partial w^1}}_{I \times 1} \cdot {\frac{\partial l} {\partial z^1}}_{1 \times m} \\
+    \notag & = & a^{IT} \cdot {\frac{\partial l} {\partial z^1}}
+    \end{align}$
+
+    $\because \frac{\partial z^1} {\partial b^1}$ is a *Jacobian* matrix and is a *identity* matrix
+
+    $\therefore$
+
+    $\begin{align}
+    \notag {\frac{\partial l} {\partial b^1}}_{1 \times m}
+    & = & {\frac{\partial l} {\partial z^1}}_{1 \times m} \cdot {\frac{\partial z^1} {\partial b^1}}_{m \times m} \\
+    \notag & = & \frac{\partial l} {\partial z^1} \cdot 1
     \end{align}$
