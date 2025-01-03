@@ -54,3 +54,30 @@ class Output_Layer(Hidden_Layer):
         self.dinput = self.dz @ self.w.T
         self.dw_temp += self.dw
         self.db_temp += self.db
+
+#Convolutional Layer
+class Convolutional_Layer:
+
+    def __init__(self, kernel:np.ndarray):
+        self.kernel = kernel
+        self.flipped_kernel = np.flip(kernel)
+        #Dimension of kernel.
+        self.kernel_row, self.kernel_column = self.kernel.shape
+
+    def forward(self, input:np.ndarray):
+        self.input = input
+        #Dimension of input.
+        self.input_row, self.input_column = self.input.shape
+        #Dimensions of output.
+        self.output = np.zeros(self.input)
+        pad_row = (self.kernel_row - 1) // 2
+        pad_column = (self.kernel_column - 1) // 2
+        padded_input = np.pad(self.input, pad_width = ((pad_row, pad_row), (pad_column, pad_column)), mode = "constant")
+        #Convolution
+        for i in range(self.input_row):
+            for j in range(self.input_column):
+                region = padded_input[i:i + self.kernel_row, j:j + self.kernel_column]
+                self.output[i, j] = np.sum(region * self.flipped_kernel)
+    
+    def backward(self, doutput):
+        ...
