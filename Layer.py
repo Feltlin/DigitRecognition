@@ -70,14 +70,23 @@ class Convolutional_Layer:
         self.input_row, self.input_column = self.input.shape
         #Dimensions of output.
         self.output = np.zeros(self.input)
-        pad_row = (self.kernel_row - 1) // 2
-        pad_column = (self.kernel_column - 1) // 2
-        padded_input = np.pad(self.input, pad_width = ((pad_row, pad_row), (pad_column, pad_column)), mode = "constant")
+        self.pad_row = (self.kernel_row - 1) // 2
+        self.pad_column = (self.kernel_column - 1) // 2
+        padded_input = np.pad(self.input, pad_width = ((self.pad_row, self.pad_row), (self.pad_column, self.pad_column)), mode = "constant")
         #Convolution
         for i in range(self.input_row):
             for j in range(self.input_column):
                 region = padded_input[i:i + self.kernel_row, j:j + self.kernel_column]
                 self.output[i, j] = np.sum(region * self.flipped_kernel)
     
-    def backward(self, doutput):
-        ...
+    def backward(self, doutput:np.ndarray):
+        self.doutput = doutput.reshape(self.input_row, self.input_column)
+        self.doutput_row, self.doutput_column = self.doutput.shape
+        self.dinput = np.zeros(self.doutput)
+        padded_doutput = np.pad(self.doutput, pad_width = ((self.pad_row, self.pad_row), (self.pad_column, self.pad_column)), mode = "constant")
+        #Backward Chain Rule Convolution
+        for i in range(self.doutput_row):
+            for j in range(self.doutput_column):
+                region = padded_doutput[i:i + self.kernel_row, j:j + self.kernel_column]
+                self.dinput[i, j] = np.sum(region * self.kernel)
+    
