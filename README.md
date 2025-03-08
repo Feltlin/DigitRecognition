@@ -98,21 +98,26 @@ Please use **VS Code** or other Markdown reader to view.
 
     Rectified linear unit:
 
-    $$ReLU(x) = \left\{
-                \begin{matrix}
-                x & x>0 \\
-                0 & x\leqslant 0
-                \end{matrix}
-                \right.$$
+    ```math
+        ReLU(x) = \left\{
+                    \begin{matrix}
+                    x & x>0 \\
+                    0 & x\leqslant 0
+                    \end{matrix}
+                    \right.
+    ```
 
     Derivative of ReLU:
 
-    $$ReLU'(x) =\left\{
-                \begin{matrix}
-                1 & x>0 \\
-                0 & x<0
-                \end{matrix}
-                \right.$$
+    ```math
+        ReLU'(x) =\left\{
+                    \begin{matrix}
+                    1 & x>0 \\
+                    0 & x<0
+                    \end{matrix}
+                    \right.
+    ```
+    
     <br><br>
 
     Sigmoid:
